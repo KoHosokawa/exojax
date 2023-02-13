@@ -1,13 +1,30 @@
 """PreSOLAR Precomputing Shape density and OverLap Add convolution Rxxxx
 
-    * LBD -> hat(LBD)
-    * shapefilter -> hat(shapefilter)
+    * lbd_olaform: LBD -> hat(LBD)
+    * shapefilter_olaform: shapefilter -> hat(shapefilter)
+    * nu_grid_olaform: nu_grid -> hat(LBD)
 
 """
 import numpy as np
 import jax.numpy as jnp
 from exojax.signal.ola import optimal_fft_length
 from exojax.signal.ola import generate_padding_matrix
+
+def nu_grid_olaform(nu_grid, ndiv, div_length, filter_length):
+    """convert nu_grid to match the form of OLA, i.e. generate hat nu_grid 
+    Args:
+        nu_grid (_type_): _description_
+        ndiv (_type_): _description_
+        div_length (_type_): _description_
+        filter_length (_type_): _description_
+
+    Returns:
+        2D array: hat nu_grid (ndiv, fft_length), i.e. olaform of nu_grid)
+    """
+    nu_grids = np.array([[nu_grid]]).T
+    hat_nu_grid = lbd_olaform(nu_grids, ndiv, div_length, filter_length)
+    return hat_nu_grid[:, :, 0, 0]
+
 
 def shapefilter_olaform(shapefilter, div_length, padding_value=0.0):
     """generate zero-padding shape filter
@@ -24,7 +41,7 @@ def shapefilter_olaform(shapefilter, div_length, padding_value=0.0):
     return _padding_zeros_axis(shapefilter, padding_value, residual)
 
 
-def lbd_olaform(lbd, ndiv, div_length, filter_length):
+def lbd_olaform(lbd, ndiv, div_length, filter_length, padding_value=-np.inf):
     """convert LBD to match the form of OLA, i.e. generate hat LBD 
 
     Args:
@@ -32,12 +49,13 @@ def lbd_olaform(lbd, ndiv, div_length, filter_length):
         ndiv (int): number of mini batches
         div_length (int): mini batch length 
         filter_length (int): filter length
+        padding_value: padding value
 
     Returns:
-        4D array: hat(LBD) (ndiv, fft_length, :, :)
+        4D array: hat(LBD) (ndiv, fft_length, :, :) i.e. olaform of LBD
     """
     rlbd = _reshape_lbd(lbd, ndiv, div_length)
-    hat_lbd = generate_padding_matrix(-np.inf, rlbd, filter_length)
+    hat_lbd = generate_padding_matrix(padding_value, rlbd, filter_length)
     return hat_lbd
 
 

@@ -46,7 +46,7 @@ def calc_xsection_from_lsd(Slsd, R, pmarray, nsigmaD, nu_grid,
     When you have the error such as: 
     "failed to initialize batched cufft plan with customized allocator: 
     Allocating 8000000160 bytes exceeds the memory limit of 4294967296 bytes."
-    consider to use moditscanfft.calc_xsection_from_lsd, instead.
+    consider to use modit_scanfft.calc_xsection_from_lsd, instead.
     
     Returns:
         Cross section in the log nu grid

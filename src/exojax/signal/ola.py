@@ -88,12 +88,13 @@ def _fft_length(div_length, filter_length):
 
 
 def generate_padding_matrix(padding_value, input_matrix, filter_length):
-    """generate a matrix with (padding_value)-padding (numpy)
+    """generate a matrix with x-padding (numpy)
 
     Args:
-        input_matrix (n dimensional array): input matrix, n >= 2, (ndiv, div_length,...)
-        fir_filter (array): FIR filter
-        
+        padding_value: x to be used for x-padding
+        input_matrix (n dim array): input matrix, n >= 2, (ndiv, div_length,...)
+        filter_length: filter length to be used for the padding size
+
     Returns:
         n dimensional array: input matrix w/ x-pad
     """

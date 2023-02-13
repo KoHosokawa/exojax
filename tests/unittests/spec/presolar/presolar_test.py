@@ -11,14 +11,16 @@ from exojax.spec.presolar import optimal_mini_batch
 from exojax.spec.presolar import lbd_olaform
 from exojax.spec.presolar import _reshape_lbd
 from exojax.spec.presolar import shapefilter_olaform
+from exojax.spec.premodit import unbiased_lsd_zeroth
 from exojax.utils.constants import Tref_original
+
 
 def _example_filter(N, filter_length):
     nu_grid, wav, resolution = wavenumber_grid(3000.0,
-                                                   5000.0,
-                                                   N,
-                                                   unit="cm-1",
-                                                   xsmode="presolar")
+                                               5000.0,
+                                               N,
+                                               unit="cm-1",
+                                               xsmode="presolar")
     return filter_length, nu_grid
 
 
@@ -93,44 +95,6 @@ def test_lbd_olaform():
     assert np.shape(hat_lbd) == (3, 762048, 19, 10)
 
 
-
-import jax.numpy as jnp
-from exojax.spec.premodit import logf_bias, g_bias
-
-
-from exojax.spec.premodit import unbiased_lsd_zeroth
-from jax import vmap 
-def vmap_unbiased_lsd(hat_lbd, T, nu_grid, elower_grid, qt):
-    """ unbias the biased LSD
-
-    Args:
-        lbd_biased: log biased hat LSD
-        T: temperature for unbiasing in Kelvin
-        nu_grid: wavenumber grid in cm-1
-        elower_grid: Elower grid in cm-1
-        qt: partition function ratio Q(T)/Q(Tref)
-
-    Returns:
-        LSD, shape = (number_of_wavenumber_bin, number_of_broadening_parameters)
-        
-    """
-    vmapped_unbiased_lsd = vmap(unbiased_lsd_zeroth,(0,None,None,None,None,None),0)
-    return vmapped_unbiased_lsd(hat_lbd, T, Tref_original, nu_grid, elower_grid, qt)
-    
-
-def test_unbiased_lsd_simple():
-    lbd = _simple_example_lbd()
-    input_length, n_broadening_grid, n_elower_grid = np.shape(lbd)
-    ndiv, div_length = 3, 5
-    filter_length = 3
-    nu_grid = np.array(range(input_length))
-    hat_lbd = lbd_olaform(lbd, ndiv, div_length, filter_length)
-    T = 1000.0  
-    elower_grid = np.ones(n_elower_grid)
-    qt = 1.0
-    lsd = unbiased_lsd_zeroth(lbd, T, Tref_original, nu_grid, elower_grid, qt)
-    assert np.all(np.shape(lsd) == (13,3))
-
 def test_shapefilter_olaform():
     N = 10
     shapefilter = np.ones((N, 3))
@@ -140,6 +104,62 @@ def test_shapefilter_olaform():
     assert res == 0.0
 
 
+from jax import vmap
+
+
+def vmap_unbiased_lsd(hat_lbd_zeroth, T, nu_grid, elower_grid, qt):
+    """ unbias the biased LSD
+
+    Args:
+        hat_lbd_zeroth: hat LBD_zeroth (olaform of LBD)
+        T: temperature for unbiasing in Kelvin
+        hat_nu_grid: hat wavenumber grid (olaform of wavenumber grid) in cm-1
+        elower_grid: Elower grid in cm-1
+        qt: partition function ratio Q(T)/Q(Tref)
+
+    Returns:
+        LSD, shape = (number_of_wavenumber_bin, number_of_broadening_parameters)
+        
+    """
+    vmapped_unbiased_lsd = vmap(unbiased_lsd_zeroth,
+                                (0, None, None, 0, None, None), 0)
+    return vmapped_unbiased_lsd(hat_lbd_zeroth, T, Tref_original, nu_grid,
+                                elower_grid, qt)
+
+
+
+
+def test_nnu_grid_olaform():
+    lbd_zeroth = _simple_example_lbd()
+    input_length, n_broadening_grid, n_elower_grid = np.shape(lbd_zeroth)
+    ndiv, div_length = 3, 5
+    filter_length = 3
+    nu_grid = np.array(range(input_length))
+    hat_nu_grid = nu_grid_olaform(nu_grid, ndiv, div_length, filter_length)
+    assert np.all(np.shape(hat_nu_grid) == (3, 7))
+
+
+def test_unbiased_lsd_simple():
+    """simple example for unbiasing LSD for hat_lbd_zeroth
+    """
+    lbd_zeroth = _simple_example_lbd()
+    input_length, n_broadening_grid, n_elower_grid = np.shape(lbd_zeroth)
+    ndiv, div_length = 3, 5
+    filter_length = 3
+    nu_grid = np.array(range(input_length))
+
+    hat_lbd_zeroth = lbd_olaform(lbd_zeroth, ndiv, div_length, filter_length)
+    hat_nu_grid = nu_grid_olaform(nu_grid, ndiv, div_length, filter_length)
+    T = 1000.0
+    elower_grid = np.ones(n_elower_grid)
+    qt = 1.0
+    #lsd_comparison = unbiased_lsd_zeroth(lbd_zeroth, T, Tref_original, nu_grid,
+    #                                     elower_grid, qt)
+    lsd = vmap_unbiased_lsd(hat_lbd_zeroth, T, hat_nu_grid, elower_grid, qt)
+    
+    assert np.all(np.shape(lsd) == (3,7,3,2))
+
+
 if __name__ == "__main__":
     #test_reshape_lbd()
     #test_reshape_lbd_simple()
@@ -147,7 +167,7 @@ if __name__ == "__main__":
     #test_lbd_olaform_simple()
     #test_lbd_olaform()
     test_unbiased_lsd_simple()
-    
+
     #test_vmap_unbiased_lsd_simple()
-    
+
     #test_shapefilter_olaform()
