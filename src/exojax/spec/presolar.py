@@ -6,9 +6,9 @@
 
 """
 import numpy as np
-import jax.numpy as jnp
 from exojax.signal.ola import optimal_fft_length
 from exojax.signal.ola import generate_padding_matrix
+
 
 def nu_grid_olaform(nu_grid, ndiv, div_length, filter_length):
     """convert nu_grid to match the form of OLA, i.e. generate hat nu_grid 
@@ -22,7 +22,11 @@ def nu_grid_olaform(nu_grid, ndiv, div_length, filter_length):
         2D array: hat nu_grid (ndiv, fft_length), i.e. olaform of nu_grid)
     """
     nu_grids = np.array([[nu_grid]]).T
-    hat_nu_grid = lbd_olaform(nu_grids, ndiv, div_length, filter_length)
+    hat_nu_grid = lbd_olaform(nu_grids,
+                              ndiv,
+                              div_length,
+                              filter_length,
+                              padding_value=1.0)
     return hat_nu_grid[:, :, 0, 0]
 
 
@@ -115,4 +119,3 @@ def _reshape_lbd(lbd, ndiv, div_length, padding_value=-np.inf):
     residual = ndiv * div_length - input_length
     rlbd = _padding_zeros_axis(lbd, padding_value, residual)
     return rlbd.reshape((ndiv, div_length, n_broadening_k, n_E_h))
-
