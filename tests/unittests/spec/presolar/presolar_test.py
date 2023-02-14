@@ -13,7 +13,11 @@ from exojax.spec.presolar import _reshape_lbd
 from exojax.spec.presolar import shapefilter_olaform
 from exojax.spec.presolar import nu_grid_olaform
 from exojax.spec.presolar import vmap_unbiased_lsd_zeroth
+from exojax.signal.ola import unfold_olaform
 
+from exojax.spec.premodit import unbiased_lsd_zeroth
+from exojax.utils.constants import Tref_original
+import pytest
 
 def _example_filter(N, filter_length):
     nu_grid, wav, resolution = wavenumber_grid(3000.0,
@@ -104,18 +108,15 @@ def test_shapefilter_olaform():
     assert res == 0.0
 
 
-
 def test_nnu_grid_olaform():
     lbd_zeroth = _simple_example_lbd()
     input_length, n_broadening_grid, n_elower_grid = np.shape(lbd_zeroth)
     ndiv, div_length = 3, 5
     filter_length = 3
-    nu_grid = np.array(range(input_length))
+    nu_grid = np.array(range(input_length))+1.0
     hat_nu_grid = nu_grid_olaform(nu_grid, ndiv, div_length, filter_length)
     assert np.all(np.shape(hat_nu_grid) == (3, 7))
 
-from exojax.spec.premodit import unbiased_lsd_zeroth
-from exojax.utils.constants import Tref_original
 
 def test_unbiased_lsd_simple():
     """simple example for unbiasing LSD for hat_lbd_zeroth
@@ -124,18 +125,21 @@ def test_unbiased_lsd_simple():
     input_length, n_broadening_grid, n_elower_grid = np.shape(lbd_zeroth)
     ndiv, div_length = 3, 5
     filter_length = 3
-    nu_grid = np.array(range(input_length))
-
+    nu_grid = np.array(range(input_length))+1.0
     hat_lbd_zeroth = lbd_olaform(lbd_zeroth, ndiv, div_length, filter_length)
     hat_nu_grid = nu_grid_olaform(nu_grid, ndiv, div_length, filter_length)
     T = 1000.0
     elower_grid = np.ones(n_elower_grid)
     qt = 1.0
-    #lsd_comparison = unbiased_lsd_zeroth(lbd_zeroth, T, Tref_original, nu_grid,
-    #                                     elower_grid, qt)
-    lsd = vmap_unbiased_lsd_zeroth(hat_lbd_zeroth, T, hat_nu_grid, elower_grid, qt)
-    
-    assert np.all(np.shape(lsd) == (3,7,3))
+    lsd_comparison = unbiased_lsd_zeroth(lbd_zeroth, T, Tref_original, nu_grid,
+                                         elower_grid, qt)
+    hat_lsd = vmap_unbiased_lsd_zeroth(hat_lbd_zeroth, T, hat_nu_grid, elower_grid,
+                                   qt)
+    assert np.all(np.shape(hat_lsd) == (3, 7, 3))
+
+    #check if the results were recovered.
+    lsd = unfold_olaform(hat_lsd, div_length, input_length=input_length)
+    assert np.all(lsd_comparison - lsd == pytest.approx(0.0))
 
 
 if __name__ == "__main__":
@@ -145,5 +149,4 @@ if __name__ == "__main__":
     #test_lbd_olaform_simple()
     #test_lbd_olaform()
     test_unbiased_lsd_simple()
-    #test_vmap_unbiased_lsd_simple()
     #test_shapefilter_olaform()

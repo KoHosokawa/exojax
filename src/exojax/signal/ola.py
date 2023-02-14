@@ -24,6 +24,37 @@ from scipy.special import lambertw
 import math
 
 
+def unfold_olaform(hat_array,div_length, input_length=None):
+    """(numpy version) unfolding an ola-formed array 
+
+    Notes:
+        For instance, if the shape of hat_array is (n,L+M-1,...) and div_length=L, 
+        the unfolded (de hat) array has the shape of (n*L,...) when input_length = None.
+        When input_length is not None, it provides (input_length,...)
+    Args:
+        hat_array (nd array): ola formed array 
+        div_length (int): div_length
+        input_length (int): input length
+
+    Returns:
+        unfold_array: unfolded (de hat) array  
+    """
+    slices = [slice(None)] * hat_array.ndim
+    slices[1] = slice(0, div_length)
+    cut_array = hat_array[tuple(slices)]
+    flat_size = cut_array.shape[0] * cut_array.shape[1]
+    if len(cut_array.shape) > 2:
+        reshape_size = (flat_size,) + cut_array.shape[2:]
+    elif len(cut_array.shape) == 2:
+        reshape_size = (flat_size,) 
+    else:
+        raise ValueError("hat_array should have 2 or more dimension.")
+
+    if input_length is not None:
+        return cut_array.reshape(reshape_size)[0:input_length]
+    else:
+        return cut_array.reshape(reshape_size)
+
 def optimal_fft_length(filter_length):
     """optimal fft length of OLA
     
