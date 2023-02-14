@@ -9,6 +9,31 @@ import numpy as np
 from exojax.signal.ola import optimal_fft_length
 from exojax.signal.ola import generate_padding_matrix
 
+from jax import vmap
+
+from exojax.spec.premodit import unbiased_lsd_zeroth
+from exojax.utils.constants import Tref_original
+
+def vmap_unbiased_lsd_zeroth(hat_lbd_zeroth, T, nu_grid, elower_grid, qt):
+    """ unbias the biased LSD
+
+    Args:
+        hat_lbd_zeroth: hat LBD_zeroth (olaform of LBD)
+        T: temperature for unbiasing in Kelvin
+        hat_nu_grid: hat wavenumber grid (olaform of wavenumber grid) in cm-1
+        elower_grid: Elower grid in cm-1
+        qt: partition function ratio Q(T)/Q(Tref)
+
+    Returns:
+        LSD, shape = (ndiv, fft_length (L+M-1), number_of_broadening_parameters)
+        
+    """
+    vmapped_unbiased_lsd = vmap(unbiased_lsd_zeroth,
+                                (0, None, None, 0, None, None), 0)
+    return vmapped_unbiased_lsd(hat_lbd_zeroth, T, Tref_original, nu_grid,
+                                elower_grid, qt)
+
+
 
 def nu_grid_olaform(nu_grid, ndiv, div_length, filter_length):
     """convert nu_grid to match the form of OLA, i.e. generate hat nu_grid 

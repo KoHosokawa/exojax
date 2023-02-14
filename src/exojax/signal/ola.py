@@ -1,3 +1,17 @@
+"""Overlap-Add (OLA) convolution
+
+
+    See Figure: https://user-images.githubusercontent.com/15956904/189552441-828c0c79-8b44-4060-944d-6fae29d5345f.PNG
+
+    * input_length = n L
+    * div_length = L
+    * filter_length = M
+    * block_size = L + M -1
+
+
+"""
+
+
 import numpy as np
 import jax.numpy as jnp
 from jax.lax import scan

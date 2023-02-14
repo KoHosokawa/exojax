@@ -141,11 +141,45 @@ def test_np_olaconv(fig=False):
         plt.legend()
         plt.show()
 
+def np_unfold_olaform(hat_array,div_length):
+    """(numpy version) unfolding an ola-formed array 
+
+    Args:
+        hat_array (_type_): ola formed array 
+        div_length (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    slices = [slice(None)] * hat_array.ndim
+    slices[1] = slice(0, div_length)
+    cut_array = hat_array[tuple(slices)]
+    flat_size = cut_array.shape[0] * cut_array.shape[1]
+    if len(cut_array.shape) > 2:
+        reshape_size = (flat_size,) + cut_array.shape[2:]
+    elif len(cut_array.shape) == 2:
+        reshape_size = (flat_size,) 
+    else:
+        raise ValueError("hat_array should have 2 or more dimensional.")
+    return cut_array.reshape(reshape_size)
+    
+def test_np_unfold_olaform():
+    a = np.ones((2,10,4,5))
+    a[:,3:,:,:]=0.0
+    div_length = 3
+    b = np_unfold_olaform(a,div_length)
+    assert np.all(b.shape == (6,4,5)) 
+    a = np.ones((2,10))
+    a[:,3:]=0.0
+    div_length = 3
+    b = np_unfold_olaform(a,div_length)
+    assert np.all(b.shape == (6,)) 
 
 if __name__ == "__main__":
     #test_generate_padding_matrix()
-    test_generate_padding_matrix_lbdlike()
+    #test_generate_padding_matrix_lbdlike()
     #test_generate_zeropad()
     #test_optimal_div_length()
     #test_olaconv(fig=True)
     #test_np_olaconv(fig=True)
+    test_np_unfold_olaform()
