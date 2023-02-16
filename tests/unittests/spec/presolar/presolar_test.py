@@ -118,7 +118,7 @@ def test_nnu_grid_olaform():
     assert np.all(np.shape(hat_nu_grid) == (3, 7))
 
 
-def test_unbiased_lsd_simple():
+def test_vmap_unbiased_lsd_simple():
     """simple example for unbiasing LSD for hat_lbd_zeroth
     """
     lbd_zeroth = _simple_example_lbd()
@@ -148,5 +148,5 @@ if __name__ == "__main__":
     #test_optimal_mini_batch()
     #test_lbd_olaform_simple()
     #test_lbd_olaform()
-    test_unbiased_lsd_simple()
+    test_vmap_unbiased_lsd_simple()
     #test_shapefilter_olaform()
