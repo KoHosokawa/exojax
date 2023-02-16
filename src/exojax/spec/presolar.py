@@ -1,4 +1,4 @@
-"""PreSOLAR Precomputing Shape density and OverLap Add convolution Rxxxx
+"""PreSOLAR Precomputing Shape density and OverLap Add for Repetive computation
 
     * lbd_olaform: LBD -> hat(LBD)
     * shapefilter_olaform: shapefilter -> hat(shapefilter)
@@ -8,9 +8,7 @@
 import numpy as np
 from exojax.signal.ola import optimal_fft_length
 from exojax.signal.ola import generate_padding_matrix
-
 from jax import vmap
-
 from exojax.spec.premodit import unbiased_lsd_zeroth
 from exojax.utils.constants import Tref_original
 
